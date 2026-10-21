@@ -18,7 +18,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.environment.unset(\"user_id\");\npm.environment.unset(\"user_email\");\nconst base = pm.iterationData.get(\"email\") || \"test@example.com\";\nconst createdEmail = Date.now() + \".\" + base;\npm.environment.set(\"run_email\", createdEmail);\npm.environment.set(\"user_email\", createdEmail);\npm.test(\"Status code is 201 Created\", function () {\n    pm.response.to.have.status(201);\n});\npm.test(\"Tạo user thành công và lưu user_id\", function () {\n    const json = pm.response.json();\n    pm.expect(json).to.have.property(\"id\");\n    pm.environment.set(\"user_id\", json.id);\n});"
+                  "pm.environment.unset(\"user_id\");\npm.environment.unset(\"user_email\");\nconst base = pm.iterationData.get(\"email\") || \"test@example.com\";\nconst createdEmail = Date.now() + \".\" + base;\npm.environment.set(\"run_email\", createdEmail);\npm.environment.set(\"user_email\", createdEmail);\n\npm.test(\"Status code is 201 Created\", function () {\n    pm.response.to.have.status(201);\n});\n\npm.test(\"Tạo user thành công và lưu user_id\", function () {\n    const json = pm.response.json();\n    pm.expect(json).to.have.property(\"id\");\n    pm.environment.set(\"user_id\", String(json.id));\n});"
                 ]
               }
             }
@@ -75,7 +75,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"user_id phải có giá trị\", function () {\n    const uid = pm.environment.get(\"user_id\");\n    pm.expect(uid, \"user_id is missing\").to.be.ok;\n});\n\npm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"ID khớp user vừa tạo\", function () {\n    const currentUserId = Number(pm.environment.get(\"user_id\"));\n    pm.expect(currentUserId).to.be.a(\"number\");\n    pm.expect(pm.response.json().id).to.eql(currentUserId);\n});"
+                  "pm.test(\"user_id phải có giá trị\", function () {\n    const uid = pm.environment.get(\"user_id\");\n    pm.expect(uid, \"user_id is missing\").to.be.ok;\n});\n\npm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"ID khớp user vừa tạo\", function () {\n    const expectedId = Number(pm.environment.get(\"user_id\"));\n    const actualId = Number(pm.response.json().id);\n    pm.expect(actualId).to.eql(expectedId);\n});"
                 ]
               }
             }
@@ -86,8 +86,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
+                  "value": \"{{token}}\",\n                  "type": "string"
                 }
               ]
             },
@@ -130,9 +129,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
+                  "value": \"{{token}}\",\n                  "type": \"string\"\n                }
               ]
             },
             "method": "PATCH",
@@ -165,63 +162,6 @@
           "response": []
         },
         {
-          "name": "Create User - Duplicate Email",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {\n    pm.response.to.have.status(422);\n});\n\npm.test(\"Lỗi email đã tồn tại\", function () {\n    const payload = pm.response.json();\n    const emailError = Array.isArray(payload) ? payload.find(item => item.field === \"email\") : null;\n    const message = emailError ? emailError.message : (payload && payload.message) || \"\";\n    pm.expect(message).to.include(\"has already been taken\");\n});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Duplicate Email Test\",\n  \"gender\": \"male\",\n  \"email\": \"{{user_email}}\",\n  \"status\": \"active\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "https://gorest.co.in/public/v2/users",
-              "protocol": "https",
-              "host": [
-                "gorest",
-                "co",
-                "in"
-              ],
-              "path": [
-                "public",
-                "v2",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Delete User",
           "event": [
             {
@@ -240,9 +180,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
+                  "value": \"{{token}}\",\n                  "type\": \"string\"\n                }
               ]
             },
             "method": "DELETE",
@@ -259,8 +197,7 @@
                 "public",
                 "v2",
                 "users",
-                "{{user_id}}"
-              ]
+                \"{{user_id}}\"\n              ]
             }
           },
           "response": []
@@ -273,7 +210,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                  "pm.test(\"Status 404 Not Found\", function () {\n    pm.response.to.have.status(404);\n});"
                 ]
               }
             }
@@ -284,9 +221,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
+                  "value": \"{{token}}\",\n                  "type\": \"string\"\n                }
               ]
             },
             "method": "GET",
@@ -303,8 +238,7 @@
                 "public",
                 "v2",
                 "users",
-                "{{user_id}}"
-              ]
+                \"{{user_id}}\"\n              ]
             }
           },
           "response": []
@@ -322,41 +256,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status code is 401 Unauthorized\", function () {\n    pm.response.to.have.status(401);\n});\n\npm.test(\"Có thông báo lỗi xác thực\", function () {\n    pm.expect(pm.response.json().message).to.include(\"Authentication failed\");\n});"
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {\n    pm.response.to.have.status(401);\n});\n\npm.test(\"Có thông báo lỗi xác thực\", function () {\n    const json = pm.response.json();\n    const message = json && json.message ? json.message : \"\";\n    pm.expect(message).to.include(\"Authentication failed\");\n});"
                 ]
               }
             }
           ],
           "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Test No Token\",\n  \"gender\": \"male\",\n  \"email\": \"notoken.2610@example.com\",\n  \"status\": \"active\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "https://gorest.co.in/public/v2/users",
-              "protocol": "https",
-              "host": [
-                "gorest",
-                "co",
-                "in"
-              ],
-              "path": [
-                "public",
-                "v2",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    }
-  ]
-}
+            "method": \"POST\",\n            \"header\": [],\n            \"body\": {\n              \"mode\": \"raw\",\n              \"raw\": \"{\\n  \\\"name\\\": \\\"Test No Token\\\",\\n  \\\"gender\\\": \\\"male\\\",\\n  \\\"email\\\": \\\"notoken.2610@example.com\\\",\\n  \\\"status\\\": \\\"active\\\"\\n}\",\n              \"options\": {\n                \"raw\": {\n                  \"language\": \"json\"\n                }\n              }\n            },\n            \"url\": {\n              \"raw\": \"https://gorest.co.in/public/v2/users\",\n              \"protocol\": \"https\",\n              \"host\": [\n                \"gorest\",\n                \"co\",\n                \"in\"\n              ],\n              \"path\": [\n                \"public\",\n                \"v2\",\n                \"users\"\n              ]\n            }\n          },\n          \"response\": []\n        },\n        {\n          \"name\": \"Create User - Duplicate Email\",\n          \"event\": [\n            {\n              \"listen\": \"test\",\n              \"script\": {\n                \"type\": \"text/javascript\",\n                \"exec\": [\n                  \"pm.test(\\\"Status code is 422 Unprocessable Entity\\\", function () {\\n    pm.response.to.have.status(422);\\n});\\n\\npm.test(\\\"Lỗi email đã tồn tại\\\", function () {\\n    const payload = pm.response.json();\\n    let message = \\\"\\\";\\n\\n    if (Array.isArray(payload)) {\\n        const emailError = payload.find(item => item.field === \\\"email\\\" || item.field === \\\"Email\\\");\\n        message = emailError ? (emailError.message || emailError.msg || \\\"\\\") : \\\"\\\";\\n    } else if (payload && payload.errors && Array.isArray(payload.errors)) {\\n        const emailError = payload.errors.find(item => item.field === \\\"email\\\" || item.field === \\\"Email\\\");\\n        message = emailError ? (emailError.message || emailError.msg || \\\"\\\") : \\\"\\\";\\n    } else if (payload && payload.message) {\\n        message = payload.message;\\n    }\\n\\n    pm.expect(message).to.include(\\\"has already been taken\\\");\\n});\"\n                ]\n              }\n            }\n          ],\n          \"request\": {\n            \"auth\": {\n              \"type\": \"bearer\",\n              \"bearer\": [\n                {\n                  \"key\": \"token\",\n                  \"value\": \"{{token}}\",\n                  \"type\": \"string\"\n                }\n              ]\n            },\n            \"method\": \"POST\",\n            \"header\": [\n              {\n                \"key\": \"Authorization\",\n                \"value\": \"Bearer {{token}}\"\n              }\n            ],\n            \"body\": {\n              \"mode\": \"raw\",\n              \"raw\": \"{\\n  \\\"name\\\": \\\"Duplicate Email Test\\\",\\n  \\\"gender\\\": \\\"male\\\",\\n  \\\"email\\\": \\\"{{user_email}}\\\",\\n  \\\"status\\\": \\\"active\\\"\\n}\",\n              \"options\": {\n                \"raw\": {\n                  \"language\": \"json\"\n                }\n              }\n            },\n            \"url\": {\n              \"raw\": \"https://gorest.co.in/public/v2/users\",\n              \"protocol\": \"https\",\n              \"host\": [\n                \"gorest\",\n                \"co\",\n                \"in\"\n              ],\n              \"path\": [\n                \"public\",\n                \"v2\",\n                \"users\"\n              ]\n            }\n          },\n          \"response\": []\n        }\n      ]\n    }\n  ]\n}\n```

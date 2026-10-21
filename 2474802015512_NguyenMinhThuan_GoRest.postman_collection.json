@@ -11,31 +11,218 @@
       "name": "Positive_Cases",
       "item": [
         {
-          "name": "Create User",
+          "name": "Post User",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.environment.unset('user_id');",
-                  "pm.environment.unset('user_email');",
-                  "const base = pm.iterationData.get('email') || 'test@example.com';",
-                  "const createdEmail = Date.now() + '.' + base;",
-                  "pm.environment.set('run_email', createdEmail);",
-                  "pm.environment.set('user_email', createdEmail);",
-                  "pm.test('Status code is 201 Created', function () {",
-                  "  pm.response.to.have.status(201);",
-                  "});",
-                  "pm.test('Response has user id', function () {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.id).to.be.a('number');",
-                  "  pm.environment.set('user_id', json.id);",
-                  "});",
-                  "pm.test('Email matches created user', function () {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.email).to.eql(pm.environment.get('user_email'));",
-                  "});"
+                  "pm.test(\"Status code là 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\nconst res = pm.response.json();\r\npm.collectionVariables.set(\"userId\", res.id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const email = Date.now() + \"_\" + pm.iterationData.get(\"email\");\r\npm.variables.set(\"email_used\", email);\r\npm.collectionVariables.set(\"userEmail\", email);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"{{name}}\",\r\n  \"gender\": \"{{gender}}\",\r\n  \"email\": \"{{email_used}}\",\r\n  \"status\": \"{{status}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code là 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Đúng user vừa tạo\", function () {\r\n    pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"userId\")));\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{userId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code là 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Status là inactive\", function () {\r\n    pm.expect(pm.response.json().status).to.eql(\"inactive\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"status\": \"inactive\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{userId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Post User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code là 422\", function () {\r\n    pm.response.to.have.status(422);\r\n});\r\npm.test(\"Báo lỗi trùng email\", function () {\r\n    pm.expect(pm.response.json()[0].field).to.eql(\"email\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Test Duplicate\",\r\n  \"gender\": \"male\",\r\n  \"email\": \"{{userEmail}}\",\r\n  \"status\": \"active\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code là 204\", function () {\r\n    pm.response.to.have.status(204);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{userId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code là 404\", function () {\r\n    pm.response.to.have.status(404);\r\n});"
                 ]
               }
             }
@@ -51,34 +238,21 @@
                 }
               ]
             },
-            "method": "POST",
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"{{name}}\",\n  \"gender\": \"{{gender}}\",\n  \"email\": \"{{run_email}}\",\n  \"status\": \"{{status}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
             "url": {
-              "raw": "https://gorest.co.in/public/v2/users",
-              "protocol": "https",
+              "raw": "{{base_url}}/users/{{userId}}",
               "host": [
-                "gorest",
-                "co",
-                "in"
+                "{{base_url}}"
               ],
               "path": [
-                "public",
-                "v2",
-                "users"
+                "users",
+                "{{userId}}"
               ]
             }
           },
@@ -90,21 +264,14 @@
       "name": "Negative_Cases",
       "item": [
         {
-          "name": "Create User - No Token",
+          "name": "POST User",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 401 Unauthorized', function () {",
-                  "  pm.response.to.have.status(401);",
-                  "});",
-                  "pm.test('Authentication error message is returned', function () {",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json).to.have.property('message');",
-                  "  pm.expect(json.message).to.match(/(unauthorized|token|authentication)/i);",
-                  "});"
+                  "pm.test(\"Status code là 401\", function () {\r\n    pm.response.to.have.status(401);\r\n});"
                 ]
               }
             }
@@ -114,7 +281,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test No Token\",\n  \"gender\": \"male\",\n  \"email\": \"notoken.2610@example.com\",\n  \"status\": \"active\"\n}",
+              "raw": "{\r\n  \"name\": \"Test No Token\",\r\n  \"gender\": \"male\",\r\n  \"email\": \"notoken@example.com\",\r\n  \"status\": \"active\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -122,80 +289,11 @@
               }
             },
             "url": {
-              "raw": "https://gorest.co.in/public/v2/users",
-              "protocol": "https",
+              "raw": "{{base_url}}/users",
               "host": [
-                "gorest",
-                "co",
-                "in"
+                "{{base_url}}"
               ],
               "path": [
-                "public",
-                "v2",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create User - Duplicate Email",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 201 Created in public API', function () {",
-                  "  pm.response.to.have.status(201);",
-                  "});",
-                  "pm.test('Duplicate email is accepted by the public API and returns an id', function () {",
-                  "  const payload = pm.response.json();",
-                  "  pm.expect(payload).to.have.property('id');",
-                  "  pm.expect(payload.email).to.eql(pm.environment.get('user_email'));",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Duplicate Email Test\",\n  \"gender\": \"male\",\n  \"email\": \"{{user_email}}\",\n  \"status\": \"active\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "https://gorest.co.in/public/v2/users",
-              "protocol": "https",
-              "host": [
-                "gorest",
-                "co",
-                "in"
-              ],
-              "path": [
-                "public",
-                "v2",
                 "users"
               ]
             }
@@ -203,6 +301,16 @@
           "response": []
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "userEmail",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
     }
   ]
 }

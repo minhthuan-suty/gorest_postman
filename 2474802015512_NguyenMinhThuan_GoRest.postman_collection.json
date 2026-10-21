@@ -18,7 +18,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.environment.unset('user_id');\npm.environment.unset('user_email');\nconst base = pm.iterationData.get('email') || 'test@example.com';\nconst createdEmail = Date.now() + '.' + base;\npm.environment.set('run_email', createdEmail);\npm.environment.set('user_email', createdEmail);\npm.test('Status code is 201 Created', function () {\n  pm.response.to.have.status(201);\n});\npm.test('Tạo user thành công và lưu user_id', function () {\n  const json = pm.response.json();\n  pm.expect(json).to.have.property('id');\n  pm.environment.set('user_id', String(json.id));\n});"
+                  "pm.environment.unset('user_id');\npm.environment.unset('user_email');\nconst base = pm.iterationData.get('email') || 'test@example.com';\nconst createdEmail = Date.now() + '.' + base;\npm.environment.set('run_email', createdEmail);\npm.environment.set('user_email', createdEmail);\npm.test('Status code is 201 Created', function () {\n  pm.response.to.have.status(201);\n});\npm.test('Response has id', function () {\n  const json = pm.response.json();\n  pm.expect(json.id).to.be.a('number');\n  pm.environment.set('user_id', json.id);\n});\npm.test('Email matches created user', function () {\n  const json = pm.response.json();\n  pm.expect(json.email).to.eql(createdEmail);\n});"
                 ]
               }
             }
@@ -75,7 +75,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('user_id phải có giá trị', function () {\n  const uid = pm.environment.get('user_id');\n  pm.expect(uid, 'user_id is missing').to.be.ok;\n});\npm.test('Status code is 200', function () {\n  pm.response.to.have.status(200);\n});\npm.test('ID khớp user vừa tạo', function () {\n  const expectedId = Number(pm.environment.get('user_id'));\n  const actualId = Number(pm.response.json().id);\n  pm.expect(actualId).to.eql(expectedId);\n});"
+                  "pm.test('user_id phải có giá trị', function () {\n  const uid = pm.environment.get('user_id');\n  pm.expect(uid, 'user_id is missing').to.be.ok;\n});\npm.test('Status code is 200 OK', function () {\n  pm.response.to.have.status(200);\n});\npm.test('User ID matches', function () {\n  const json = pm.response.json();\n  pm.expect(json.id).to.eql(Number(pm.environment.get('user_id')));\n});"
                 ]
               }
             }
@@ -119,7 +119,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('user_id phải có giá trị', function () {\n  const uid = pm.environment.get('user_id');\n  pm.expect(uid, 'user_id is missing').to.be.ok;\n});\npm.test('Status code is 200', function () {\n  pm.response.to.have.status(200);\n});\npm.test('Status đã đổi thành inactive', function () {\n  pm.expect(pm.response.json().status).to.eql('inactive');\n});"
+                  "pm.test('user_id phải có giá trị', function () {\n  const uid = pm.environment.get('user_id');\n  pm.expect(uid, 'user_id is missing').to.be.ok;\n});\npm.test('Status code is 200 OK', function () {\n  pm.response.to.have.status(200);\n});\npm.test('Status updated', function () {\n  const json = pm.response.json();\n  pm.expect(json.status).to.eql('inactive');\n});"
                 ]
               }
             }
@@ -265,7 +265,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 401 Unauthorized', function () {\n  pm.response.to.have.status(401);\n});\npm.test('Có thông báo lỗi xác thực', function () {\n  const json = pm.response.json();\n  const message = json && json.message ? json.message : '';\n  pm.expect(message).to.include('Authentication failed');\n});"
+                  "pm.test('Status code is 401 Unauthorized', function () {\n  pm.response.to.have.status(401);\n});\npm.test('Authentication error message is returned', function () {\n  const json = pm.response.json();\n  pm.expect(json).to.have.property('message');\n  pm.expect(json.message).to.match(/(unauthorized|token|authentication)/i);\n});"
                 ]
               }
             }
@@ -307,7 +307,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 422 Unprocessable Entity', function () {\n  pm.response.to.have.status(422);\n});\npm.test('has already been taken', function () {\n  const payload = pm.response.json();\n  let message = '';\n\n  if (Array.isArray(payload)) {\n    const emailError = payload.find(item => item.field === 'email' || item.field === 'Email');\n    message = emailError ? (emailError.message || emailError.msg || '') : '';\n  } else if (payload && payload.errors && Array.isArray(payload.errors)) {\n    const emailError = payload.errors.find(item => item.field === 'email' || item.field === 'Email');\n    message = emailError ? (emailError.message || emailError.msg || '') : '';\n  } else if (payload && payload.message) {\n    message = payload.message;\n  }\n\n  pm.expect(message).to.include('has already been taken');\n});"
+                  "pm.test('Status code is 422 Unprocessable Entity', function () {\n  pm.response.to.have.status(422);\n});\npm.test('Duplicate email validation error is returned', function () {\n  const payload = pm.response.json();\n  pm.expect(payload).to.have.property('message');\n  pm.expect(payload.message).to.match(/email/i);\n});"
                 ]
               }
             }

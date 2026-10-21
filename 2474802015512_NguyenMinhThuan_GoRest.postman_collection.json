@@ -75,7 +75,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"ID khớp user vừa tạo\", function () {\n    pm.expect(pm.response.json().id).to.eql(Number(pm.environment.get(\"user_id\")));\n});"
+                  "pm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"ID khớp user vừa tạo\", function () {\n    const currentUserId = Number(pm.environment.get(\"user_id\"));\n    pm.expect(currentUserId).to.be.a(\"number\");\n    pm.expect(pm.response.json().id).to.eql(currentUserId);\n});"
                 ]
               }
             }
@@ -165,7 +165,7 @@
           "response": []
         },
         {
-          "name": "Duplicate Email Check",
+          "name": "Create User - Duplicate Email",
           "event": [
             {
               "listen": "test",
@@ -229,7 +229,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status code is 204 No Content\", function () {\n    pm.response.to.have.status(204);\n});"
+                  "pm.test(\"Status code is 204 No Content\", function () {\n    const uid = pm.environment.get(\"user_id\");\n    pm.expect(uid, \"user_id is missing\").to.be.ok;\n    pm.response.to.have.status(204);\n});"
                 ]
               }
             }

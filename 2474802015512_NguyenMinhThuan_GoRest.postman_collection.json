@@ -29,7 +29,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "a9b96a8550ca7037b66ba8e8358ea5bcd8e15d32bb524c1918120acb96d4351b",
+                  "value": "{{token}}",
                   "type": "string"
                 }
               ]

@@ -18,7 +18,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.environment.unset(\"user_id\");\nconst base = pm.iterationData.get(\"email\") || \"test@example.com\";\npm.environment.set(\"run_email\", Date.now() + \".\" + base);"
+                  "pm.environment.unset(\"user_id\");\nconst base = pm.iterationData.get(\"email\") || \"test@example.com\";\nconst email = Date.now() + \".\" + base;\npm.environment.set(\"run_email\", email);\npm.environment.set(\"user_email\", email);\n\npm.test(\"Status code is 201 Created\", function () {\n    pm.response.to.have.status(201);\n});\n\npm.test(\"Tạo user thành công và lưu user_id\", function () {\n    const json = pm.response.json();\n    pm.expect(json).to.have.property(\"id\");\n    pm.environment.set(\"user_id\", json.id);\n});"
                 ]
               }
             }
@@ -172,7 +172,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {\n    pm.response.to.have.status(422);\n});\n\npm.test(\"Lỗi email đã tồn tại\", function () {\n    const err = pm.response.json().find(e => e.field === \"email\");\n    pm.expect(err).to.not.be.undefined;\n    pm.expect(err.message).to.include(\"has already been taken\");\n});"
+                  "pm.test(\"Status code is 422 Unprocessable Entity\", function () {\n    pm.response.to.have.status(422);\n});\n\npm.test(\"Lỗi email đã tồn tại\", function () {\n    const error = pm.response.json().find(e => e.field === \"email\");\n    pm.expect(error).to.not.be.undefined;\n    pm.expect(error.message).to.include(\"has already been taken\");\n});"
                 ]
               }
             }
@@ -197,7 +197,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Duplicate Email Test\",\n  \"gender\": \"male\",\n  \"email\": \"{{run_email}}\",\n  \"status\": \"active\"\n}",
+              "raw": "{\n  \"name\": \"Duplicate Email Test\",\n  \"gender\": \"male\",\n  \"email\": \"{{user_email}}\",\n  \"status\": \"active\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
